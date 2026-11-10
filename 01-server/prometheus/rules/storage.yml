@@ -1,0 +1,49 @@
+groups:
+  - name: storage
+    rules:
+      - alert: PVCAlmostFull
+        expr: |
+          100 * kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 85
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ $value | printf \"%.0f\" }}% full ({{ $labels.cluster }})"
+
+      - alert: PVCInodesLow
+        expr: |
+          100 * kubelet_volume_stats_inodes_free / kubelet_volume_stats_inodes < 10
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} has under 10% inodes free"
+
+      - alert: NodeFilesystemLow
+        expr: |
+          100 * node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint=~"/|/var/lib/docker|/var/lib/containerd|/var/lib/rancher|/var/lib/longhorn-disk"}
+              / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint=~"/|/var/lib/docker|/var/lib/containerd|/var/lib/rancher|/var/lib/longhorn-disk"} < 15
+        for: 10m
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.instance }} {{ $labels.mountpoint }} has under 15% free ({{ $labels.cluster }})"
+
+      - alert: LonghornNodeStorageHigh
+        expr: |
+          100 * longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes > 80
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Longhorn node {{ $labels.node }} storage is {{ $value | printf \"%.0f\" }}% used"
+
+      - alert: LonghornVolumeDegraded
+        expr: longhorn_volume_robustness == 2
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Longhorn volume {{ $labels.volume }} is degraded"
+
+      - alert: LonghornVolumeFaulted
+        expr: longhorn_volume_robustness == 3
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "Longhorn volume {{ $labels.volume }} is faulted"

@@ -1,0 +1,12 @@
+apiVersion: 1
+datasources:
+  - name: Rancher-Prometheus
+    uid: rancher-cluster-prom
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    basicAuth: true
+    basicAuthUser: $PROM_USER
+    secureJsonData:
+      basicAuthPassword: $PROM_PASSWORD

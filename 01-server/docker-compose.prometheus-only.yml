@@ -1,0 +1,21 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --web.config.file=/etc/prometheus/web.yml
+    - --web.enable-remote-write-receiver
+    - --storage.tsdb.path=/prometheus
+    - --storage.tsdb.retention.time=30d
+    ports:
+    - 9090:9090
+    volumes:
+    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./prometheus/web.yml:/etc/prometheus/web.yml:ro
+    - ./prometheus/rules:/etc/prometheus/rules:ro
+    - ./prometheus/secrets:/etc/prometheus/secrets:ro
+    - prometheus-data:/prometheus
+volumes:
+  prometheus-data: null

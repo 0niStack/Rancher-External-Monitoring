@@ -1,0 +1,14 @@
+# Drop into your EXISTING Grafana's provisioning/datasources/ and restart Grafana.
+# Or skip this file and add the same values in the UI (Connections > Data sources > Add > Prometheus).
+apiVersion: 1
+datasources:
+  - name: Rancher-Prometheus
+    uid: rancher-cluster-prom        # unique, does not clash with your other Prometheus datasources
+    type: prometheus
+    access: proxy
+    url: https://prometheus.example.com   # or http://<vm-ip>:9090 on a private network
+    isDefault: false                 # keep your existing default untouched
+    basicAuth: true
+    basicAuthUser: writer            # PROM_USER
+    secureJsonData:
+      basicAuthPassword: CHANGE_ME   # PROM_PASSWORD

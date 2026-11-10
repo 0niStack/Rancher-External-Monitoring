@@ -1,0 +1,48 @@
+# kube-prometheus-stack: collectors only. Metrics are pushed to the external Prometheus.
+fullnameOverride: kps
+
+defaultRules:
+  create: false
+alertmanager:
+  enabled: false
+grafana:
+  enabled: false
+
+# RKE2/Rancher: these endpoints are not reachable the standard way, disable to avoid noisy down targets
+kubeControllerManager: {enabled: false}
+kubeScheduler: {enabled: false}
+kubeEtcd: {enabled: false}
+kubeProxy: {enabled: false}
+coreDns: {enabled: false}
+kubeApiServer: {enabled: false}
+
+nodeExporter:
+  enabled: true        # DaemonSet, tolerates control-plane taints, so master AND workers
+kube-state-metrics:
+  enabled: true
+  metricLabelsAllowlist:
+    - namespaces=[field.cattle.io/projectId]   # Rancher project ID on each namespace
+
+kubelet:
+  enabled: true
+  serviceMonitor:
+    cAdvisor: true     # container_fs_*, per-pod ephemeral usage
+    resource: false
+
+prometheus:
+  prometheusSpec:
+    retention: 6h                                   # local buffer only
+    serviceMonitorSelectorNilUsesHelmValues: false  # also pick up the Longhorn ServiceMonitor
+    podMonitorSelectorNilUsesHelmValues: false
+    externalLabels:
+      cluster: my-cluster                           # <-- change per cluster
+    remoteWrite:
+      - url: https://prometheus.example.com/api/v1/write   # <-- change
+        basicAuth:
+          username: {name: remote-write-auth, key: username}
+          password: {name: remote-write-auth, key: password}
+        # Only ship what the dashboard needs
+        writeRelabelConfigs:
+          - sourceLabels: [__name__]
+            action: keep
+            regex: "up|node_cpu_seconds_total|node_memory_.*|node_filesystem_.*|node_load.*|node_uname_info|kubelet_volume_stats_.*|container_fs_.*|container_cpu_usage_seconds_total|container_memory_working_set_bytes|kube_node_.*|kube_namespace_.*|kube_persistentvolume.*|kube_persistentvolumeclaim.*|kube_pod_.*|longhorn_.*"

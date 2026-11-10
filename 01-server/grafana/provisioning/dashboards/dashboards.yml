@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+  - name: cluster-storage
+    folder: Rancher Cluster
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
